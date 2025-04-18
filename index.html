@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃什么 - 随机菜单选择器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #23243a 0%, #3a3e5e 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column; /* Changed to column */
+            align-items: center;
+            justify-content: flex-start; /* Changed to flex-start */
+            color: #eaeaea;
+        }
+
+        .ticket-navbar {
+            width: 100%; /* Changed to 100% */
+            max-width: 480px; /* Added max-width */
+            height: 60px;
+            background: #23243a;
+            /* Removed border-radius for top bar */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky; /* Make navbar sticky */
+            top: 0;
+            z-index: 10;
+            margin-bottom: 32px; /* Add margin below navbar */
+        }
+
+        .ticket-back {
+            position: absolute;
+            left: 24px;
+            font-size: 1.5rem;
+            color: #fff;
+            opacity: 0.7;
+            cursor: pointer;
+            line-height: 60px; /* Center vertically */
+        }
+
+        .ticket-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #fff;
+            letter-spacing: 0.08em;
+        }
+
+        .ticket-card {
+            background: rgba(45, 49, 77, 0.9);
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            max-width: 420px;
+            width: 90vw; /* Responsive width */
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px) saturate(150%);
+        }
+
+        .ticket-visual {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .ticket-maintext {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .ticket-subtext {
+            font-size: 1rem;
+            color: #aaa;
+        }
+
+        .ticket-divider {
+            width: 100%;
+            height: 5px; /* Height for the dashed effect */
+            background-image: linear-gradient(to right, #6a82fb 50%, transparent 50%); /* Dashed line color */
+            background-size: 16px 5px; /* Size of dashes */
+            background-repeat: repeat-x;
+            margin: 16px 0 32px 0;
+            opacity: 0.5;
+        }
+
+        .ticket-detail {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            width: 100%;
+            margin-bottom: 24px;
+            border-radius: 16px;
+            background: rgba(34, 39, 54, 0.8);
+            box-shadow: 0 1px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden; /* Ensure button radius applies */
+        }
+
+        input#food-input {
+            flex: 1;
+            padding: 14px 16px;
+            border: none;
+            /* border-radius: 16px 0 0 16px; */ /* Handled by parent */
+            font-size: 1rem;
+            background: transparent;
+            outline: none;
+            color: #fff;
+        }
+        input#food-input::placeholder {
+            color: #888;
+        }
+
+        input#food-input:focus {
+            background: rgba(0,0,0, 0.1);
+        }
+
+        button.add-btn {
+            background: linear-gradient(90deg, #6a82fb 0%, #8e7ff3 100%);
+            color: #fff;
+            border: none;
+            padding: 14px 22px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+            /* border-radius: 0 16px 16px 0; */ /* Handled by parent */
+        }
+
+        button.add-btn:hover {
+            background: linear-gradient(90deg, #8e7ff3 0%, #6a82fb 100%);
+            transform: scale(1.05);
+        }
+
+        button.action-btn {
+            width: 100%;
+            padding: 14px 0;
+            margin-bottom: 16px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(90deg, #6a82fb 0%, #8e7ff3 100%);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(106, 130, 251, 0.2);
+        }
+
+        button.action-btn:hover {
+            background: linear-gradient(90deg, #8e7ff3 0%, #6a82fb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(106, 130, 251, 0.3);
+        }
+        button.action-btn:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 8px rgba(106, 130, 251, 0.2);
+        }
+
+        button#clear-btn {
+             background: linear-gradient(90deg, #777 0%, #999 100%);
+             box-shadow: 0 4px 12px rgba(120, 120, 120, 0.2);
+        }
+        button#clear-btn:hover {
+             background: linear-gradient(90deg, #999 0%, #777 100%);
+             box-shadow: 0 6px 16px rgba(120, 120, 120, 0.3);
+        }
+         button#clear-btn:active {
+            box-shadow: 0 2px 8px rgba(120, 120, 120, 0.2);
+        }
+
+        /* Modal Styles */
+        #menu-modal {
+            /* display: none; */ /* Controlled by JS */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            display: flex; /* Use flex to center */
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #menu-modal.show {
+             /* display: flex; */ /* Already flex */
+             opacity: 1;
+             visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(45, 49, 77, 0.9); /* Slightly more transparent */
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            padding: 28px 18px 18px 18px;
+            max-width: 400px;
+            width: 90vw;
+            max-height: 80vh;
+            display: flex; /* Use flex for layout */
+            flex-direction: column; /* Stack items vertically */
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.18); /* Slightly more visible border */
+            backdrop-filter: blur(12px) saturate(160%); /* Enhanced glassmorphism */
+        }
+
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 18px;
+            color: #fff;
+        }
+
+        ul#menu-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 18px;
+            max-height: 50vh; /* Limit height */
+            overflow-y: auto; /* Add scroll */
+            background: rgba(34, 39, 54, 0.8);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        ul#menu-list li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        ul#menu-list li .delete-item {
+            background: #ff5252;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        ul#menu-list li .delete-item:hover {
+            opacity: 1;
+        }
+
+        #close-menu-modal {
+            margin-top: 12px;
+            background: #bbb;
+            width: 100%; /* Make close button full width */
+        }
+
+        /* Mode Switcher Styles */
+        .mode-switcher {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: rgba(35, 36, 58, 0.7);
+            padding: 5px;
+            border-radius: 10px;
+            max-width: 300px;
+            width: 80vw;
+            margin-top: 20px; /* Add some space from top */
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            background: transparent;
+            color: #aaa;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.3s, color 0.3s;
+            text-align: center;
+        }
+        .mode-btn.active {
+            background: linear-gradient(90deg, #6a82fb 0%, #8e7ff3 100%);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(106, 130, 251, 0.2);
+        }
+
+        /* Main Content Area Styles */
+        .main-content {
+            background: rgba(45, 49, 77, 0.85); /* Slightly more transparent */
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            max-width: 420px;
+            width: 90vw; /* Responsive width */
+            /* padding: 32px 24px; */ /* Padding removed, handled by inner elements */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Slightly more visible border */
+            backdrop-filter: blur(15px) saturate(180%); /* Enhanced glassmorphism */
+            overflow: hidden; /* Important for stub divider */
+            position: relative; /* Needed for absolute positioning of divider */
+        }
+
+        /* Central Clickable Area Styles */
+        .random-select-area {
+            width: 100%;
+            height: 200px; /* Adjust height as needed */
+            display: flex;
+            flex-direction: column; /* Stack placeholder and result */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            text-align: center;
+            padding: 20px;
+            transition: background-color 0.2s;
+            font-size: 3rem; /* Increased font size */
+            font-weight: bold;
+            color: #fff;
+        }
+        .random-select-area:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        #result-placeholder {
+            /* Styles for the initial text */
+        }
+        #result-text {
+            /* Styles for the result text, initially hidden */
+            font-size: 2.8rem; /* Increased font size */
+            margin-top: 10px;
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        /* Ticket Stub Divider Styles */
+        .ticket-stub-divider {
+            width: calc(100% + 4px); /* Slightly wider to overlap border */
+            height: 20px; /* Height of the stub effect */
+            background-color: #23243a; /* Match body background */
+            position: relative;
+            margin: 0 -2px; /* Pull back to cover border */
+            overflow: hidden; /* Hide parts of circles */
+        }
+        .ticket-stub-divider::before,
+        .ticket-stub-divider::after {
+            content: '';
+            position: absolute;
+            top: -10px; /* Half of height */
+            width: 20px; /* Diameter of circle */
+            height: 20px; /* Diameter of circle */
+            border-radius: 50%;
+            background-color: #23243a; /* Match body background */
+            box-shadow: 0 0 0 10px rgba(45, 49, 77, 0.9); /* Cutout effect - match card bg */
+        }
+        .ticket-stub-divider::before {
+            left: -10px; /* Position left circle */
+        }
+        .ticket-stub-divider::after {
+            right: -10px; /* Position right circle */
+        }
+        /* Dashed line inside the stub */
+        .ticket-stub-divider::after {
+             /* Reusing ::after for the dashed line overlay */
+             content: '';
+             position: absolute;
+             top: 50%;
+             left: 20px; /* Start after left circle */
+             right: 20px; /* End before right circle */
+             height: 2px;
+             background-image: linear-gradient(to right, #6a82fb 50%, transparent 50%);
+             background-size: 10px 2px;
+             background-repeat: repeat-x;
+             transform: translateY(-50%);
+             opacity: 0.5;
+             box-shadow: none; /* Remove cutout shadow from this pseudo */
+             border-radius: 0; /* Remove border radius */
+             width: auto; /* Let left/right define width */
+             height: 2px; /* Height of the dash */
+        }
+
+        /* Menu List Button Area Styles */
+        .menu-list-area {
+            width: 100%;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(45, 49, 77, 0.9); /* Match card bg */
+        }
+
+        /* Adjust button margins */
+        .menu-list-area .action-btn {
+            margin-bottom: 16px;
+        }
+        .menu-list-area .action-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Vote Section Styles (Adjusted for new position) */
+        /* #vote-section styles moved to the element itself for initial hiding */
+        #vote-section h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        #vote-section h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        #vote-section label, #vote-section span {
+             color: #ccc;
+             margin-bottom: 10px;
+             display: inline-block;
+        }
+        #vote-section select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            margin-left: 5px;
+        }
+        ul#vote-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+            max-height: 30vh;
+            overflow-y: auto;
+        }
+        ul#vote-menu-list li {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: #eaeaea;
+            display: flex;
+            /* justify-content: space-between; */ /* Let label grow */
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+         ul#vote-menu-list li:hover {
+             background: rgba(255, 255, 255, 0.1);
+         }
+        ul#vote-menu-list li input[type="checkbox"] {
+            margin-right: 10px; /* Space between checkbox and label */
+            transform: scale(1.2);
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+        }
+        ul#vote-menu-list li label {
+            flex-grow: 1; /* Allow label to take remaining space */
+            cursor: pointer;
+            margin-bottom: 0; /* Override default margin */
+        }
+        #vote-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: #ccc;
+        }
+        #exit-vote-btn {
+            background: #777;
+        }
+
+        /* Result Display Area - Integrated into .random-select-area */
+        /* .result-display { */ /* Removed old style block */
+            margin-top: 20px; /* Add space above result */
+            margin-bottom: 20px; /* Add space below result */
+            padding: 20px;
+            background: rgba(106, 130, 251, 0.15);
+            border: 1px dashed rgba(106, 130, 251, 0.5);
+            border-radius: 16px;
+            width: 100%;
+            text-align: center;
+            min-height: 60px; /* Ensure it has some height */
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            display: none; /* Hidden initially */
+            align-items: center; /* Center content vertically */
+            justify-content: center; /* Center content horizontally */
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        /* .result-display.show { */ /* Removed old style block */
+            display: flex; /* Show when result is generated */
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        /* Animation for result text */
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 600px) {
+            .ticket-card {
+                padding: 24px 16px;
+            }
+            .ticket-maintext {
+                font-size: 1.8rem;
+            }
+            .ticket-subtext {
+                font-size: 0.9rem;
+            }
+            input#food-input,
+            /* button.add-btn, */ /* Add button removed from main */
+            button.action-btn {
+                font-size: 0.9rem;
+                padding: 12px 16px;
+            }
+            /* button.add-btn { */ /* Add button removed from main */
+                 padding: 12px 18px;
+            }
+            .modal-content {
+                padding: 20px 12px 12px 12px;
+            }
+            .random-select-area {
+                font-size: 1.8rem; /* Adjust font size */
+                height: 150px;
+            }
+            #result-text {
+                font-size: 1.5rem;
+            }
+            /* .result-display { */ /* Removed old style block */
+                font-size: 1.2rem;
+                min-height: 50px;
+                padding: 15px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Mode Switcher -->
+    <div class="mode-switcher">
+        <button class="mode-btn active" id="random-mode-btn">随机模式</button>
+        <button class="mode-btn" id="vote-mode-btn-top">投票模式</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Central Clickable Area -->
+        <div class="random-select-area" id="random-select-area">
+            <span id="result-placeholder">今天吃什么?</span>
+            <span id="result-text" style="display: none;"></span>
+        </div>
+
+        <!-- Ticket Stub Divider -->
+        <div class="ticket-stub-divider"></div>
+
+        <!-- Menu List Button Area -->
+        <div class="menu-list-area">
+            <button class="action-btn" id="menu-list-btn">菜单列表</button>
+            <!-- Removed random-btn and vote-mode-btn from here -->
+
+            <!-- Clear button moved to modal -->
+        </div>
+    </div> <!-- End of main-content -->
+
+    <!-- Vote Section (Moved outside main content, initially hidden) -->
+    <div id="vote-section-main" style="display: none; max-width: 420px; width: 90vw; margin: 20px auto; padding: 20px; background: rgba(45, 49, 77, 0.9); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px) saturate(150%);">
+        <h2>菜单投票（匿名）</h2>
+        <div style="margin-bottom:10px;">
+            <label>投票场次：</label>
+            <select id="vote-session">
+                <option value="lunch">午餐</option>
+                <option value="dinner">晚餐</option>
+            </select>
+            <span id="vote-deadline" style="margin-left:10px;color:#888;"></span>
+        </div>
+        <ul id="vote-menu-list"></ul> <!-- Vote items will be populated here -->
+        <button class="action-btn" id="submit-vote-btn">提交匿名投票</button>
+        <button class="action-btn" id="exit-vote-btn">退出投票模式</button>
+        <div id="vote-result"></div>
+    </div>
+
+    <!-- Menu List Modal -->
+    <div id="menu-modal">
+        <div class="modal-content">
+            <h2>菜单列表</h2>
+            <div class="input-group" style="margin-bottom: 15px;"> <!-- Add input group here -->
+                <input type="text" id="modal-food-input" placeholder="在此添加菜品..." style="flex: 1; padding: 10px 12px; border: none; border-radius: 8px 0 0 8px; font-size: 0.9rem; background: rgba(34, 39, 54, 0.8); outline: none; color: #fff;"/>
+                <button class="add-btn" id="modal-add-btn" style="border-radius: 0 8px 8px 0; font-size: 0.9rem; padding: 10px 15px;">添加</button>
+            </div>
+            <ul id="menu-list"></ul> <!-- List items will be populated here -->
+            <button class="action-btn" id="clear-btn" style="margin-top: 15px; background: linear-gradient(90deg, #777 0%, #999 100%); box-shadow: 0 4px 12px rgba(120, 120, 120, 0.2);">清空列表</button> <!-- Moved Clear Button Here -->
+            <button class="action-btn" id="close-menu-modal" style="margin-top: 10px; background: #bbb;">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Element Selection (Updated) ---
+        const randomModeBtn = document.getElementById('random-mode-btn');
+        const voteModeBtnTop = document.getElementById('vote-mode-btn-top');
+        const mainContent = document.querySelector('.main-content');
+        const randomSelectArea = document.getElementById('random-select-area');
+        const resultPlaceholder = document.getElementById('result-placeholder');
+        const resultText = document.getElementById('result-text');
+        const menuListBtn = document.getElementById('menu-list-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const menuModal = document.getElementById('menu-modal');
+        const menuList = document.getElementById('menu-list');
+        const modalFoodInput = document.getElementById('modal-food-input');
+        const modalAddBtn = document.getElementById('modal-add-btn');
+        const closeMenuModalBtn = document.getElementById('close-menu-modal');
+        // Select the main vote section (outside main-content)
+        const voteSectionMain = document.getElementById('vote-section-main');
+        const voteMenuList = voteSectionMain.querySelector('#vote-menu-list');
+        const submitVoteBtn = voteSectionMain.querySelector('#submit-vote-btn');
+        const exitVoteBtn = voteSectionMain.querySelector('#exit-vote-btn');
+        const voteResult = voteSectionMain.querySelector('#vote-result');
+        const voteSessionSelect = voteSectionMain.querySelector('#vote-session');
+        const voteDeadlineSpan = voteSectionMain.querySelector('#vote-deadline');
+
+        let foodItems = JSON.parse(localStorage.getItem('foodItems')) || [];
+        let voteData = JSON.parse(localStorage.getItem('voteData')) || { lunch: {}, dinner: {} };
+        let voterId = localStorage.getItem('voterId');
+        if (!voterId) {
+            voterId = 'voter_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('voterId', voterId);
+        }
+
+        // --- Core Functions (Updated) ---
+        function addItemFromModal() {
+            const foodName = modalFoodInput.value.trim();
+            if (foodName && !foodItems.includes(foodName)) {
+                foodItems.push(foodName);
+                localStorage.setItem('foodItems', JSON.stringify(foodItems));
+                modalFoodInput.value = '';
+                displayMenuList(); // Refresh list after adding
+                console.log(`Added: ${foodName}`);
+            } else if (foodItems.includes(foodName)){
+                 alert(`${foodName} 已经在菜单里啦！`);
+            } else {
+                alert('请输入有效的菜品名称！');
+            }
+        }
+
+        let isAnimating = false; // Prevent multiple clicks during animation
+        function triggerRandomSelection() {
+            if (isAnimating || foodItems.length === 0) {
+                    if (foodItems.length === 0) {
+                        resultPlaceholder.textContent = '菜单空的';
+                        resultText.textContent = '快去列表添加吧！';
+                        resultText.style.display = 'block';
+                        resultPlaceholder.style.display = 'none';
+                    }
+                    return;
+                }
+                isAnimating = true;
+                resultPlaceholder.style.display = 'none'; // Hide placeholder
+                resultText.style.display = 'block'; // Show result area
+                resultText.textContent = '选选中...'; // Initial text
+
+                let intervalCount = 0;
+                const maxIntervals = 15; // Number of quick changes
+                const intervalTime = 100; // Milliseconds between changes
+
+                const animationInterval = setInterval(() => {
+                    const tempIndex = Math.floor(Math.random() * foodItems.length);
+                    resultText.textContent = `${foodItems[tempIndex]}?`;
+                    intervalCount++;
+                    if (intervalCount >= maxIntervals) {
+                        clearInterval(animationInterval);
+                        const finalIndex = Math.floor(Math.random() * foodItems.length);
+                        const selectedFood = foodItems[finalIndex];
+                        resultText.textContent = `今天吃 ${selectedFood}！`;
+                        isAnimating = false;
+                    }
+                }, intervalTime);
+            }
+
+            function displayMenuList() {
+                menuList.innerHTML = ''; // Clear previous list
+                if (foodItems.length === 0) {
+                    menuList.innerHTML = '<li>菜单是空的...</li>';
+                } else {
+                    foodItems.forEach((item, index) => {
+                        const li = document.createElement('li');
+                        const span = document.createElement('span');
+                        span.textContent = item;
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = '×';
+                        deleteBtn.classList.add('delete-item');
+                        deleteBtn.onclick = (e) => {
+                            e.stopPropagation(); // Prevent modal close if clicking delete
+                            deleteItem(index);
+                        };
+                        li.appendChild(span);
+                        li.appendChild(deleteBtn);
+                        menuList.appendChild(li);
+                    });
+                }
+                // Add input focus logic if needed
+                menuModal.classList.add('show');
+                // Optional: Focus the input when modal opens
+                // setTimeout(() => modalFoodInput.focus(), 100);
+            }
+
+            function deleteItem(index) {
+                foodItems.splice(index, 1);
+                localStorage.setItem('foodItems', JSON.stringify(foodItems));
+                displayMenuList(); // Refresh the list in the modal
+            }
+
+            function clearList() {
+                if (confirm('确定要清空所有菜单项吗？')) {
+                    foodItems = [];
+                    localStorage.removeItem('foodItems');
+                    // Also clear vote data related to these items if desired
+                    voteData = { lunch: {}, dinner: {} };
+                    localStorage.setItem('voteData', JSON.stringify(voteData));
+
+                    // Reset result display area
+                    resultPlaceholder.textContent = '今天吃什么?';
+                    resultPlaceholder.style.display = 'block';
+                    resultText.textContent = '';
+                    resultText.style.display = 'none';
+
+                    if (menuModal.classList.contains('show')) {
+                        displayMenuList(); // Update modal if open
+                    }
+                    if (voteSection.style.display === 'block'){
+                        populateVoteList(); // Update vote list if open
+                        renderVoteResult(); // Update vote result if open
+                    }
+                    alert('菜单已清空！');
+                }
+            }
+
+            function closeModal() {
+                menuModal.classList.remove('show');
+            }
+
+            // --- Mode Switching and Voting Functions (Updated) ---
+            function showRandomMode() {
+                mainContent.style.display = 'flex'; // Show main random content area
+                voteSectionMain.style.display = 'none'; // Hide the main vote section
+                randomModeBtn.classList.add('active');
+                voteModeBtnTop.classList.remove('active');
+            }
+
+            function showVoteMode() {
+                mainContent.style.display = 'none'; // Hide main random content area
+                voteSectionMain.style.display = 'block'; // Show the main vote section
+                randomModeBtn.classList.remove('active');
+                voteModeBtnTop.classList.add('active');
+
+                // Initialize vote section when switching
+                populateVoteList();
+                updateVoteDeadline();
+                renderVoteResult();
+            }
+
+            // Renamed from enterVoteMode, now just populates the list
+            function populateVoteList() {
+                voteMenuList.innerHTML = ''; // Clear previous list
+                if (foodItems.length === 0) {
+                    voteMenuList.innerHTML = '<li>先去菜单列表添加菜品吧...</li>';
+                    submitVoteBtn.disabled = true; // Disable submit if no items
+                } else {
+                    submitVoteBtn.disabled = false;
+                    const currentSession = voteSessionSelect.value;
+                    const userVotes = voteData[currentSession]?.[voterId] || []; // Safer access
+
+                    foodItems.forEach(item => {
+                        const li = document.createElement('li');
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `vote-${item.replace(/\s+/g, '-')}`; // Unique ID for label association, handle spaces
+                        checkbox.value = item;
+                        checkbox.checked = userVotes.includes(item); // Check if user already voted for this
+                        checkbox.style.marginRight = '10px'; // Add some space
+
+                        const label = document.createElement('label');
+                        label.htmlFor = checkbox.id; // Associate label with checkbox
+                        label.textContent = item;
+                        label.style.flexGrow = '1'; // Allow label to take space
+
+                        li.appendChild(checkbox);
+                        li.appendChild(label);
+                        // Add click listener to li for easier checking
+                        li.onclick = (e) => { 
+                            // Prevent double toggling if clicking directly on checkbox/label
+                            if (e.target === li) {
+                                checkbox.checked = !checkbox.checked; 
+                            }
+                        };
+                        voteMenuList.appendChild(li);
+                    });
+                }
+            }
+
+            // exitVoteMode is now handled by showRandomMode triggered by the top button or the exit button in vote section
+
+            function submitVote() {
+                const session = voteSessionSelect.value;
+                const deadline = getDeadline(session);
+                const now = new Date();
+
+                if (now > deadline) {
+                    alert('抱歉，本轮投票已截止！');
+                    return;
+                }
+
+                // Check if already voted in this session (simple check)
+                if (localStorage.getItem(`voted_${session}_${voterId}`)) {
+                     alert('您已经投过票了！');
+                     return;
+                }
+
+                const selectedVotes = [];
+                const checkboxes = voteMenuList.querySelectorAll('input[name="vote-food"]:checked');
+                checkboxes.forEach(cb => selectedVotes.push(cb.value));
+
+                if (selectedVotes.length === 0) {
+                    alert('请至少选择一个菜品进行投票！');
+                    return;
+                }
+
+                // Update vote counts
+                selectedVotes.forEach(food => {
+                    if (!voteData[session][food]) {
+                        voteData[session][food] = 0;
+                    }
+                    voteData[session][food]++;
+                });
+
+                localStorage.setItem('voteData', JSON.stringify(voteData));
+                localStorage.setItem(`voted_${session}_${voterId}`, 'true'); // Mark as voted
+
+                renderVoteResult(); // Update display
+                alert('投票成功！');
+                // Optionally clear checkboxes after voting
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+
+            function renderVoteResult() {
+                const session = voteSessionSelect.value;
+                const sessionVotes = voteData[session] || {};
+                // Calculate total votes and votes per item
+                let totalVotes = 0;
+                const itemVotes = {};
+                foodItems.forEach(item => itemVotes[item] = 0); // Initialize all items with 0 votes
+
+                // Aggregate votes from all voters for the session
+                Object.values(sessionVotes).forEach(voterChoices => {
+                    if (Array.isArray(voterChoices)) { // Check if it's the array of choices
+                        voterChoices.forEach(choice => {
+                            if (itemVotes.hasOwnProperty(choice)) {
+                                itemVotes[choice]++;
+                                totalVotes++;
+                            }
+                        });
+                    }
+                });
+
+                let html = '<h4>投票结果</h4>';
+                if (totalVotes === 0) {
+                    html += '<p style="color:#888">暂无投票</p>';
+                } else {
+                    // Sort items by vote count
+                    const sortedVotes = Object.entries(itemVotes)
+                                        .filter(([item, count]) => foodItems.includes(item)) // Only show items currently in the list
+                                        .sort(([, countA], [, countB]) => countB - countA);
+
+                    sortedVotes.forEach(([food, count]) => {
+                        const percentage = ((count / totalVotes) * 100).toFixed(1);
+                        html += `<p>${food}: ${count}票 (${percentage}%)</p>`;
+                    });
+                    if (sortedVotes.length > 0 && sortedVotes[0][1] > 0) {
+                         html += `<p style="margin-top:10px; font-weight:bold; color:#6a82fb;">当前最高票: ${sortedVotes[0][0]}</p>`;
+                    }
+                }
+                voteResult.innerHTML = html;
+            }
+
+            function getDeadline(session) {
+                const now = new Date();
+                const hour = session === 'lunch' ? 11 : 17; // Lunch deadline 11:00
+                const minute = session === 'lunch' ? 0 : 0; // Dinner deadline 17:00
+                let deadline = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
+
+                // If deadline has passed for today, set it for tomorrow
+                if (now.getTime() >= deadline.getTime()) {
+                    deadline.setDate(deadline.getDate() + 1);
+                }
+                return deadline;
+            }
+
+            function updateVoteDeadline() {
+                const session = voteSessionSelect.value;
+                const deadline = getDeadline(session);
+                const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }; // hour12: false
+                voteDeadlineSpan.textContent = `截止: ${deadline.toLocaleTimeString('zh-CN', options)}`;
+            }
+
+            // --- Event Listeners (Updated) ---
+
+            // Mode Switching
+            randomModeBtn.addEventListener('click', showRandomMode);
+            voteModeBtnTop.addEventListener('click', showVoteMode);
+            // Use the exit button within the vote section to switch back to random mode
+            exitVoteBtn.addEventListener('click', showRandomMode);
+
+            // Random Selection Trigger
+            randomSelectArea.addEventListener('click', triggerRandomSelection);
+
+            // Menu List Modal
+            menuListBtn.addEventListener('click', displayMenuList);
+            closeMenuModalBtn.addEventListener('click', closeModal);
+            modalAddBtn.addEventListener('click', addItemFromModal); // Add from modal
+            modalFoodInput.addEventListener('keypress', (e) => { // Enter key in modal
+                if (e.key === 'Enter') {
+                    addItemFromModal();
+                }
+            });
+            // Close modal if clicking outside the content
+            menuModal.addEventListener('click', (e) => {
+                if (e.target === menuModal) {
+                    closeModal();
+                }
+            });
+
+            // Voting
+            submitVoteBtn.addEventListener('click', submitVote);
+            voteSessionSelect.addEventListener('change', () => {
+                populateVoteList(); // Refresh list on session change
+                renderVoteResult(); // Refresh results on session change
+                updateVoteDeadline(); // Update deadline display
+            });
+
+            // Clear List
+            clearBtn.addEventListener('click', clearList);
+
+
+            // --- Initial Setup ---
+            showRandomMode(); // Start in Random mode by default
+            updateVoteDeadline(); // Set initial deadline display for vote mode
+            // renderVoteResult(); // Don't render vote results initially unless starting in vote mode
+
+        </script>
+    </body>
+    </html>
